@@ -1,0 +1,24 @@
+<root>
+ <spec>assignment_spec.mcrl2</spec>
+ <properties>
+  <property>dead</property>
+  <property>1a</property>
+  <property>1b</property>
+  <property>1c</property>
+  <property>1d</property>
+  <property>1e</property>
+  <property>1f</property>
+  <property>2ai</property>
+  <property>2aii</property>
+  <property>2aiii</property>
+  <property>2aiv</property>
+  <property>2bi</property>
+  <property>2bii</property>
+  <property>2biii</property>
+  <property>2biv</property>
+  <property>2bv</property>
+  <property>2bvi</property>
+  <property>2bvii</property>
+  <property>2bviii</property>
+ </properties>
+</root>

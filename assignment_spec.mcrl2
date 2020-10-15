@@ -1,0 +1,262 @@
+sort
+    TubeState  = struct norm     | slow | fire;
+    MaxSpeed   = struct _max_100 | _max_4;
+    LightColor = struct red      | green;
+    SwitchMode = struct on       | off;
+    Tube       = struct tube1    | tube2;
+    CommLine   = struct line1    | line2;
+    FlagBit    = struct flag0    | flag1;
+    Error      = struct e;
+
+act
+    set_max_speed: Tube # MaxSpeed;
+    reverse_fan: Tube;
+    set_traffic_light: Tube # LightColor;
+    set_barrier, set_fire_alarm, set_escape_route_light: Tube # SwitchMode;
+    report_state: Tube # TubeState;
+
+    s_notice, s_notice_c, s_notice_l, r_notice, r_notice_l, r_notice_o: CommLine # Tube # TubeState # FlagBit;
+    s_notice, s_notice_c, s_notice_l, r_notice, r_notice_l, r_notice_o: CommLine # Tube # Error;
+
+    s_notice_ack, s_notice_ack_o, s_notice_ack_l, r_notice_ack, r_notice_ack_l, r_notice_ack_c: CommLine # Tube # FlagBit;
+    s_notice_ack, s_notice_ack_o, s_notice_ack_l, r_notice_ack, r_notice_ack_l, r_notice_ack_c: CommLine # Tube # Error;
+
+    i;
+
+map
+    get_tube_index: Tube -> Nat;
+    update_state: Tube # TubeState # List(TubeState) -> List(TubeState);
+    update_fan: Tube # List(Bool) -> List(Bool);
+    alter_flag: FlagBit -> FlagBit;
+    alter_line: CommLine -> CommLine;
+
+var
+    temp_state1: TubeState;
+    temp_state2: TubeState;
+    new_state: TubeState;
+
+    temp_bool1: Bool;
+    temp_bool2: Bool;
+
+    temp_mode1: SwitchMode;
+    temp_mode2: SwitchMode;
+    new_mode: SwitchMode;
+
+eqn
+    get_tube_index(tube1) = 0;
+    get_tube_index(tube2) = 1;
+
+    update_state(tube1, new_state, [temp_state1, temp_state2]) = [new_state, temp_state2];
+    update_state(tube2, new_state, [temp_state1, temp_state2]) = [temp_state1, new_state];
+
+    update_fan(tube1, [temp_bool1, temp_bool2]) = [!temp_bool1, temp_bool2];
+    update_fan(tube2, [temp_bool1, temp_bool2]) = [temp_bool1, !temp_bool2];
+
+    alter_flag(flag0) = flag1;
+    alter_flag(flag1) = flag0;
+
+    alter_line(line1) = line2;
+    alter_line(line2) = line1;
+
+proc
+    CommunicationLine(_error_1: Bool, _error_2: Bool)
+    =   sum tube:Tube.(
+            sum state:TubeState.(
+                sum flag:FlagBit.(
+                    s_notice_l(line1, tube, state, flag).(
+                        (_error_1 == true) -> (
+                            % can have error
+                            i.r_notice_l(line1, tube, state, flag).CommunicationLine(_error_1, _error_2)
+                        +   i.r_notice_l(line1, tube, e).CommunicationLine(_error_1, false)
+                        ) <> (
+                            % no error possible
+                            r_notice_l(line1, tube, state, flag).CommunicationLine(_error_1, _error_2)
+                        )
+                    )
+                +   s_notice_l(line2, tube, state, flag).(
+                        (_error_2 == true) -> (
+                            % can have error
+                            i.r_notice_l(line2, tube, state, flag).CommunicationLine(_error_1, _error_2)
+                        +   i.r_notice_l(line2, tube, e).CommunicationLine(false, _error_2)
+                        ) <> (
+                            % no error possible
+                            r_notice_l(line2, tube, state, flag).CommunicationLine(_error_1, _error_2)
+                        )
+                    )
+                )
+            )
+        )
+    +   sum tube:Tube.(
+            sum flag:FlagBit.(
+                s_notice_ack_l(line1, tube, flag).(
+                    (_error_1 == true) -> (
+                        % can have error
+                        i.r_notice_ack_l(line1, tube, flag).CommunicationLine(_error_1, _error_2)
+                    +   i.r_notice_ack_l(line1, tube, e).CommunicationLine(_error_1, false)
+                    ) <> (
+                        % no error possible
+                        r_notice_ack_l(line1, tube, flag).CommunicationLine(true, _error_2)
+                    )
+                )
+            +   s_notice_ack_l(line2, tube, flag).(
+                    (_error_2 == true) -> (
+                        % can have error
+                        i.r_notice_ack_l(line2, tube, flag).CommunicationLine(_error_1, _error_2)
+                    +   i.r_notice_ack_l(line2, tube, e).CommunicationLine(false, _error_2)
+                    ) <> (
+                        % no error possible
+                        r_notice_ack_l(line2, tube, flag).CommunicationLine(_error_1, true)
+                    )
+                )
+            )
+        );
+
+    % operator interface
+    Operator(_flag: FlagBit)
+    % s_notice, r_notice: CommLine # Tube # TubeState # FlagBit; % internal
+    =   sum tube:Tube.(
+            sum cl:CommLine.(
+                sum state:TubeState.(
+                    r_notice_o(cl, tube, state, _flag).(
+                        % success
+                        s_notice_ack_o(cl, tube, _flag).
+                        Operator(alter_flag(_flag))
+                    )
+                +   (r_notice_o(cl, tube, state, alter_flag(_flag)) + r_notice_o(cl, tube, e)).(
+                        % failed
+                        s_notice_ack_o(cl, tube, alter_flag(_flag)).
+                        Operator(_flag)
+                    )
+                )
+            )
+        );
+
+
+    % Controller
+    Controller(_state: List(TubeState), _fan_traffic: List(Bool), _flag: FlagBit)
+    =   sum tube:Tube.(
+            (_state.get_tube_index(tube) == norm) -> (
+                report_state(tube, slow).
+                set_traffic_light(tube, red).
+                set_barrier(tube, off).
+                sum cl:CommLine.(
+                    s_notice_c(cl, tube, slow, _flag).(
+                        r_notice_ack_c(cl, tube, _flag)
+                    +   (r_notice_ack_c(cl, tube, alter_flag(_flag)) + r_notice_ack_c(cl, tube, e)).(
+                            s_notice_c(alter_line(cl), tube, slow, _flag).
+                            r_notice_ack_c(alter_line(cl), tube, _flag)
+                        )
+                    ).Controller(update_state(tube, slow, _state), _fan_traffic, alter_flag(_flag))
+                )
+            )
+        )
+
+    +   sum tube:Tube.(
+            (_state.get_tube_index(tube) == norm) -> (
+                report_state(tube, fire).
+                set_traffic_light(tube, red).
+                set_barrier(tube, off).
+                set_fire_alarm(tube, on).
+                set_escape_route_light(tube, on).
+                set_max_speed(tube, _max_4).
+                (_fan_traffic.0 == _fan_traffic.1) -> (
+                    % norm -> one on fire
+                    reverse_fan(tube).
+                    sum cl:CommLine.(
+                        s_notice_c(cl, tube, fire, _flag).(
+                            r_notice_ack_c(cl, tube, _flag)
+                        +   (r_notice_ack_c(cl, tube, alter_flag(_flag)) + r_notice_ack_c(cl, tube, e)).(
+                                s_notice_c(alter_line(cl), tube, fire, _flag).
+                                r_notice_ack_c(alter_line(cl), tube, _flag)
+                            )
+                        ).Controller(update_state(tube, fire, _state), update_fan(tube, _fan_traffic), alter_flag(_flag))
+                    )
+                ) <> (
+                    sum cl:CommLine.(
+                        s_notice_c(cl, tube, fire, _flag).(
+                            r_notice_ack_c(cl, tube, _flag)
+                        +   (r_notice_ack_c(cl, tube, alter_flag(_flag)) + r_notice_ack_c(cl, tube, e)).(
+                                s_notice_c(alter_line(cl), tube, fire, _flag).
+                                r_notice_ack_c(alter_line(cl), tube, _flag)
+                            )
+                        ).Controller(update_state(tube, fire, _state), _fan_traffic, alter_flag(_flag))
+                    )
+                )
+            )
+        )
+    +   sum tube:Tube.(
+            (_state.get_tube_index(tube) != norm) -> (
+                report_state(tube, norm).
+                set_traffic_light(tube, green).
+                set_barrier(tube, on).
+                set_fire_alarm(tube, off).
+                set_escape_route_light(tube, off).
+                set_max_speed(tube, _max_100).
+                (_fan_traffic.0 == false || _fan_traffic.1 == false) -> (
+                    % recover from fire
+                    (_state.0 == fire && _state.1 == fire) -> (
+                        % both on fire -> one on fire
+                        sum cl:CommLine.(
+                            s_notice_c(cl, tube, norm, _flag).(
+                                r_notice_ack_c(cl, tube, _flag)
+                            +   (r_notice_ack_c(cl, tube, alter_flag(_flag)) + r_notice_ack_c(cl, tube, e)).(
+                                    s_notice_c(alter_line(cl), tube, norm, _flag).
+                                    r_notice_ack_c(alter_line(cl), tube, _flag)
+                                )
+                            ).Controller(update_state(tube, norm, _state), _fan_traffic, alter_flag(_flag))
+                        )
+                    ) <> (
+                        % one on fire -> norm
+                        reverse_fan(tube).
+                        sum cl:CommLine.(
+                            s_notice_c(cl, tube, norm, _flag).(
+                                r_notice_ack_c(cl, tube, _flag)
+                            +   (r_notice_ack_c(cl, tube, alter_flag(_flag)) + r_notice_ack_c(cl, tube, e)).(
+                                    s_notice_c(alter_line(cl), tube, norm, _flag).
+                                    r_notice_ack_c(alter_line(cl), tube, _flag)
+                                )
+                            ).Controller(update_state(tube, norm, _state), update_fan(tube, _fan_traffic), alter_flag(_flag))
+                        )
+                    )
+                ) <> (
+                    % recover from slow
+                    sum cl:CommLine.(
+                        s_notice_c(cl, tube, norm, _flag).(
+                            r_notice_ack_c(cl, tube, _flag)
+                        +   (r_notice_ack_c(cl, tube, alter_flag(_flag)) + r_notice_ack_c(cl, tube, e)).(
+                                s_notice_c(alter_line(cl), tube, norm, _flag).
+                                r_notice_ack_c(alter_line(cl), tube, _flag)
+                            )
+                        ).Controller(update_state(tube, norm, _state), _fan_traffic, alter_flag(_flag))
+                    )
+                )
+            )
+        );
+
+
+init
+    allow({
+        set_max_speed,
+        reverse_fan,
+        set_traffic_light,
+        set_barrier,
+        set_fire_alarm,
+        set_escape_route_light,
+        report_state,
+        s_notice,
+        r_notice,
+        s_notice_ack,
+        r_notice_ack,
+        i
+    },  comm({
+            s_notice_c | s_notice_l -> s_notice,
+            r_notice_l | r_notice_o -> r_notice,
+            s_notice_ack_o | s_notice_ack_l -> s_notice_ack,
+            r_notice_ack_l | r_notice_ack_c -> r_notice_ack
+        },
+            % Tunnel1(_max_100, true, green, on, off, off) ||
+            CommunicationLine(true, true) ||
+            Operator(flag0) ||
+            Controller([norm, norm], [true, true], flag0)
+        )
+    );

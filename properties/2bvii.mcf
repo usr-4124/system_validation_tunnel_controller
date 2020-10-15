@@ -1,0 +1,9 @@
+forall tube:Tube.([true*.report_state(tube, fire)] mu X.([!set_max_speed(tube, _max_4)]X && <true>true)) &&
+nu X(isTube1OnFire : Bool = false, isTube2OnFire : Bool = false).(
+    [report_state(tube1, fire)]X(true, isTube2OnFire) &&
+    [report_state(tube1, norm)]X(false, isTube2OnFire) &&
+	[report_state(tube2, fire)]X(isTube1OnFire, true) &&
+    [report_state(tube2, norm)]X(isTube1OnFire, false) &&
+    (val(isTube1OnFire) => ([report_state(tube1, slow)]false)) &&
+	(val(isTube2OnFire) => ([report_state(tube1, slow)]false))
+)

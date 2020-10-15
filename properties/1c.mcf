@@ -1,0 +1,8 @@
+forall tube:Tube.(
+    nu X(isSlow : Bool = false, isFire : Bool = false).(
+        [report_state(tube, slow)]X(true, isFire) &&
+        [report_state(tube, fire)]X(isSlow, true) &&
+        [report_state(tube, norm)]X(false, false) &&
+        (val(!isSlow && !isFire) => ([set_traffic_light(tube, red)]false))
+    )
+)

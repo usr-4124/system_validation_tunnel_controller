@@ -1,0 +1,1 @@
+forall tube:Tube.([true*.report_state(tube, fire)] mu X.([!set_barrier(tube, off)]X && <true>true))
