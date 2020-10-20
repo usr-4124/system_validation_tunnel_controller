@@ -6,7 +6,7 @@ forall tube:Tube.
         [report_state(tube, fire)]X(observed_isSlow, true) &&
         [report_state(tube, norm)]X(false, false) &&
         (val(!observed_isSlow && !observed_isFire) =>
-		([(!(report_state(tube, slow) || report_state(tube, fire) || report_state(tube, norm) || reverse_fan(tube)))*.
+	    ([(!(report_state(tube, slow) || report_state(tube, fire) || report_state(tube, norm) || reverse_fan(tube)))*.
             reverse_fan(tube)]false))
     )
 )
