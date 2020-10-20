@@ -1,9 +1,9 @@
 forall tube:Tube.(
-    nu X(isSlow : Bool = false, isFire : Bool = false).(
-        [report_state(tube, slow)]X(true, isFire) &&
-        [report_state(tube, fire)]X(isSlow, true) &&
+    nu X(observed_isSlow : Bool = false, observed_isFire : Bool = false).(
+        [report_state(tube, slow)]X(true, observed_isFire) &&
+        [report_state(tube, fire)]X(observed_isSlow, true) &&
         [report_state(tube, norm)]X(false, false) &&
-        (val(!isSlow && !isFire) =>
+        (val(!observed_isSlow && !observed_isFire) =>
 		([(!(report_state(tube, slow) || report_state(tube, fire) || report_state(tube, norm) || set_fire_alarm(tube, on)))*.
             set_fire_alarm(tube, on)]false))
     )

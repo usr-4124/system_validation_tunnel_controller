@@ -1,12 +1,12 @@
-nu X(isTube1OnFire : Bool = false, isTube2OnFire : Bool = false).(
-    [report_state(tube1, fire)]X(true, isTube2OnFire) &&
-    [report_state(tube1, norm)]X(false, isTube2OnFire) &&
-	[report_state(tube2, fire)]X(isTube1OnFire, true) &&
-    [report_state(tube2, norm)]X(isTube1OnFire, false) &&
-    [report_state(tube1, slow)]X(isTube1OnFire, isTube2OnFire) &&
-	[report_state(tube2, slow)]X(isTube1OnFire, isTube2OnFire) &&
-    (val(isTube1OnFire && isTube2OnFire) => (forall tube:Tube.[(!(report_state(tube, slow) || report_state(tube, fire) || report_state(tube, norm)))*.
+nu X(observed_isFire1 : Bool = false, observed_isFire2 : Bool = false).(
+    [report_state(tube1, fire)]X(true, observed_isFire2) &&
+    [report_state(tube1, norm)]X(false, observed_isFire2) &&
+    [report_state(tube1, slow)]X(observed_isFire1, observed_isFire2) &&
+	[report_state(tube2, fire)]X(observed_isFire1, true) &&
+    [report_state(tube2, norm)]X(observed_isFire1, false) &&
+	[report_state(tube2, slow)]X(observed_isFire1, observed_isFire2) &&
+    (val(observed_isFire1 && observed_isFire2) => (forall tube:Tube.[(!(report_state(tube, slow) || report_state(tube, fire) || report_state(tube, norm)))*.
         reverse_fan(tube)]false)) &&
-	(val(isTube1OnFire == true && isTube2OnFire == false) => mu Y.([!reverse_fan(tube1)]Y && <true>true)) &&
-	(val(isTube1OnFire == false && isTube2OnFire == true) => mu Y.([!reverse_fan(tube2)]Y && <true>true))
+	(val(observed_isFire1 == true && observed_isFire2 == false) => mu Y.([!reverse_fan(tube1)]Y && <true>true)) &&
+	(val(observed_isFire1 == false && observed_isFire2 == true) => mu Y.([!reverse_fan(tube2)]Y && <true>true))
 )
