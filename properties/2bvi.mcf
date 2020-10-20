@@ -5,8 +5,9 @@ nu X(observed_isFire1 : Bool = false, observed_isFire2 : Bool = false).(
 	[report_state(tube2, fire)]X(observed_isFire1, true) &&
     [report_state(tube2, norm)]X(observed_isFire1, false) &&
 	[report_state(tube2, slow)]X(observed_isFire1, observed_isFire2) &&
-    (val(observed_isFire1 && observed_isFire2) => (forall tube:Tube.[(!(report_state(tube, slow) || report_state(tube, fire) || report_state(tube, norm)))*.
-        reverse_fan(tube)]false)) &&
+    (val(observed_isFire1 && observed_isFire2) =>
+        (forall tube:Tube.[(!(report_state(tube, slow) || report_state(tube, fire) || report_state(tube, norm) || reverse_fan(tube)))*.
+            reverse_fan(tube)]false)) &&
 	(val(observed_isFire1 == true && observed_isFire2 == false) => mu Y.([!reverse_fan(tube1)]Y && <true>true)) &&
 	(val(observed_isFire1 == false && observed_isFire2 == true) => mu Y.([!reverse_fan(tube2)]Y && <true>true))
 )
