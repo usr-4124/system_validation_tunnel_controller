@@ -4,6 +4,10 @@ nu X(isTube1OnFire : Bool = false, isTube2OnFire : Bool = false).(
     [report_state(tube1, norm)]X(false, isTube2OnFire) &&
 	[report_state(tube2, fire)]X(isTube1OnFire, true) &&
     [report_state(tube2, norm)]X(isTube1OnFire, false) &&
-    (val(isTube1OnFire) => ([report_state(tube1, slow)]false)) &&
-	(val(isTube2OnFire) => ([report_state(tube1, slow)]false))
+    [report_state(tube1, slow)]X(isTube1OnFire, isTube2OnFire) &&
+	[report_state(tube2, slow)]X(isTube1OnFire, isTube2OnFire) &&
+    (val(isTube1OnFire) => ([(!(report_state(tube1, slow) || report_state(tube1, fire) || report_state(tube1, norm)))*.
+        report_state(tube1, slow)]false)) &&
+	(val(isTube2OnFire) => ([(!(report_state(tube2, slow) || report_state(tube2, fire) || report_state(tube2, norm)))*.
+        report_state(tube2, slow)]false))
 )

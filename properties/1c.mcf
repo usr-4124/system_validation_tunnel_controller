@@ -3,6 +3,8 @@ forall tube:Tube.(
         [report_state(tube, slow)]X(true, isFire) &&
         [report_state(tube, fire)]X(isSlow, true) &&
         [report_state(tube, norm)]X(false, false) &&
-        (val(!isSlow && !isFire) => ([set_traffic_light(tube, red)]false))
+        (val(!isSlow && !isFire) =>
+		([(!(report_state(tube, slow) || report_state(tube, fire) || report_state(tube, norm) || set_traffic_light(tube, red)))*.
+            set_traffic_light(tube, red)]false))
     )
 )

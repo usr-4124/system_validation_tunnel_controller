@@ -3,8 +3,10 @@ nu X(isTube1OnFire : Bool = false, isTube2OnFire : Bool = false).(
     [report_state(tube1, norm)]X(false, isTube2OnFire) &&
 	[report_state(tube2, fire)]X(isTube1OnFire, true) &&
     [report_state(tube2, norm)]X(isTube1OnFire, false) &&
-    (val(isTube1OnFire && isTube2OnFire) => ([reverse_fan(tube1)]false)) &&
-	(val(isTube1OnFire && isTube2OnFire) => ([reverse_fan(tube2)]false)) &&
+    [report_state(tube1, slow)]X(isTube1OnFire, isTube2OnFire) &&
+	[report_state(tube2, slow)]X(isTube1OnFire, isTube2OnFire) &&
+    (val(isTube1OnFire && isTube2OnFire) => (forall tube:Tube.[(!(report_state(tube, slow) || report_state(tube, fire) || report_state(tube, norm)))*.
+        reverse_fan(tube)]false)) &&
 	(val(isTube1OnFire == true && isTube2OnFire == false) => mu Y.([!reverse_fan(tube1)]Y && <true>true)) &&
 	(val(isTube1OnFire == false && isTube2OnFire == true) => mu Y.([!reverse_fan(tube2)]Y && <true>true))
 )

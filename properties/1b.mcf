@@ -3,6 +3,8 @@ forall tube:Tube.(
         [report_state(tube, slow)]X(true, isFire) &&
         [report_state(tube, fire)]X(isSlow, true) &&
         [report_state(tube, norm)]X(false, false) &&
-        (val(!isSlow && !isFire) => ([set_max_speed(tube, _max_4)]false))
+        (val(!isSlow && !isFire) =>
+		([(!(report_state(tube, slow) || report_state(tube, fire) || report_state(tube, norm) || set_max_speed(tube, _max_4)))*.
+            set_max_speed(tube, _max_4)]false))
     )
 )
