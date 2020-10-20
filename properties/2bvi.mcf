@@ -2,9 +2,9 @@ nu X(observed_isFire1 : Bool = false, observed_isFire2 : Bool = false).(
     [report_state(tube1, fire)]X(true, observed_isFire2) &&
     [report_state(tube1, norm)]X(false, observed_isFire2) &&
     [report_state(tube1, slow)]X(observed_isFire1, observed_isFire2) &&
-	[report_state(tube2, fire)]X(observed_isFire1, true) &&
+    [report_state(tube2, fire)]X(observed_isFire1, true) &&
     [report_state(tube2, norm)]X(observed_isFire1, false) &&
-	[report_state(tube2, slow)]X(observed_isFire1, observed_isFire2) &&
+    [report_state(tube2, slow)]X(observed_isFire1, observed_isFire2) &&
     (val(observed_isFire1 && observed_isFire2) =>
         (forall tube:Tube.[(!(report_state(tube, slow) || report_state(tube, fire) || report_state(tube, norm) || reverse_fan(tube)))*.
             reverse_fan(tube)]false)) &&
