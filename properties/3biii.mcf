@@ -1,0 +1,2 @@
+forall tube:Tube. ([true*.report_state(tube, norm)]
+  mu X.([!exists cl:CommLine.exists b:FlagBit.s_notice(cl, tube, norm, b)]X && <true>true))

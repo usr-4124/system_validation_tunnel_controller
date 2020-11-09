@@ -1,1 +1,10 @@
-forall tube:Tube.([true*.report_state(tube, slow)] mu X.([!set_barrier(tube, off)]X && <true>true))
+forall tube:Tube.([true*.report_state(tube, slow)]
+  mu X.([!set_barrier(tube, close)]X && <true>true)) &&
+  nu X(observed_isSlow : Bool = false, observed_isFire : Bool = false).
+  (
+    [report_state(tube, slow)]X(true, observed_isFire) &&
+    [report_state(tube, fire)]X(observed_isSlow, true) &&
+    [report_state(tube, norm)]X(false, false) &&
+    [forall state:TubeState.(!(report_state(tube, state)))]X(observed_isSlow, observed_isFire) &&
+    (val(observed_isSlow) => ([set_barrier(tube, open)]false))
+  )

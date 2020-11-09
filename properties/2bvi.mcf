@@ -1,13 +1,20 @@
-nu X(observed_isFire1 : Bool = false, observed_isFire2 : Bool = false).(
-    [report_state(tube1, fire)]X(true, observed_isFire2) &&
-    [report_state(tube1, norm)]X(false, observed_isFire2) &&
-    [report_state(tube1, slow)]X(observed_isFire1, observed_isFire2) &&
-    [report_state(tube2, fire)]X(observed_isFire1, true) &&
-    [report_state(tube2, norm)]X(observed_isFire1, false) &&
-    [report_state(tube2, slow)]X(observed_isFire1, observed_isFire2) &&
-    (val(observed_isFire1 && observed_isFire2) =>
-        (forall tube:Tube.[(!(report_state(tube, slow) || report_state(tube, fire) || report_state(tube, norm) || reverse_fan(tube)))*.
-            reverse_fan(tube)]false)) &&
-	(val(observed_isFire1 == true && observed_isFire2 == false) => mu Y.([!reverse_fan(tube1)]Y && <true>true)) &&
-	(val(observed_isFire1 == false && observed_isFire2 == true) => mu Y.([!reverse_fan(tube2)]Y && <true>true))
+nu X(observed_isFire1:Bool=false, observed_isFire2:Bool=false, observed_fan_direction1:Bool=true, observed_fan_direction2:Bool=true).(
+  [set_fan_direction(tube1, same_as_traffic)]X(observed_isFire1, observed_isFire2, true, observed_fan_direction2) &&
+  [set_fan_direction(tube1, opposite_to_traffic)]X(observed_isFire1, observed_isFire2, false, observed_fan_direction2) &&
+  [set_fan_direction(tube2, same_as_traffic)]X(observed_isFire1, observed_isFire2, observed_fan_direction1, true) &&
+  [set_fan_direction(tube2, opposite_to_traffic)]X(observed_isFire1, observed_isFire2, observed_fan_direction1, false) &&
+  [report_state(tube1, slow)]X(observed_isFire1, observed_isFire2, observed_fan_direction1, observed_fan_direction2) &&
+  [report_state(tube1, fire)]X(true, observed_isFire2, observed_fan_direction1, observed_fan_direction2) &&
+  [report_state(tube1, norm)]X(false, observed_isFire2, observed_fan_direction1, observed_fan_direction2) &&
+  [report_state(tube2, slow)]X(observed_isFire1, observed_isFire2, observed_fan_direction1, observed_fan_direction2) &&
+  [report_state(tube2, fire)]X(observed_isFire1, true, observed_fan_direction1, observed_fan_direction2) &&
+  [report_state(tube2, norm)]X(observed_isFire1, false, observed_fan_direction1, observed_fan_direction2) &&
+  [forall tube:Tube.forall fd:FanDirection.(!(set_fan_direction(tube, fd))) && forall state:TubeState.(!(report_state(tube, state)))]
+    X(observed_isFire1, observed_isFire2, observed_fan_direction1, observed_fan_direction2) &&
+  (val(observed_isFire1 || observed_isFire2) =>
+  [forall cl:CommLine.forall b:FlagBit.forall tube:Tube.s_notice(cl, tube, fire, b)]
+  (val(
+    (observed_fan_direction1==true && observed_fan_direction2==false)||
+    (observed_fan_direction1==false && observed_fan_direction2==true)
+  )))
 )

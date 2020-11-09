@@ -1,0 +1,2 @@
+forall tube:Tube.([true*.report_state(tube, norm)]
+	mu X.([!set_escape_route_light(tube, off)]X && <true>true))

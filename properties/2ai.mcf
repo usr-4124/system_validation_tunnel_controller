@@ -1,1 +1,2 @@
-forall tube:Tube.([true*.report_state(tube, slow)] mu X.([!set_traffic_light(tube, red)]X && <true>true))
+forall tube:Tube.([true*.report_state(tube, slow)]
+  mu X.([!set_traffic_light(tube, red)]X && <true>true))

@@ -1,8 +1,2 @@
-forall tube:Tube.([true*.report_state(tube, fire)] mu X.([!set_max_speed(tube, _max_4)]X && <true>true)) &&
-nu X(observed_isFire : Bool = false).(
-    [report_state(tube, fire)]X(true) &&
-    [report_state(tube, norm)]X(false) &&
-	[report_state(tube, slow)]X(observed_isFire) &&
-    (val(observed_isFire) => ([(!(report_state(tube, slow) || report_state(tube, fire) || report_state(tube, norm)))*.
-        report_state(tube, slow)]false))
-)
+forall tube:Tube.([true*.report_state(tube, fire)]
+  mu X.([!set_max_speed(tube, _max_4)]X && <true>true))

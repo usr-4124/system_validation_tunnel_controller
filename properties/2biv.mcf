@@ -1,1 +1,2 @@
-forall tube:Tube.([true*.report_state(tube, fire)] mu X.([!set_fire_alarm(tube, on)]X && <true>true))
+forall tube:Tube.([true*.report_state(tube, fire)]
+  mu X.([!set_fire_alarm(tube, on)]X && <true>true))

@@ -1,10 +1,11 @@
-forall tube:Tube.(
-    nu X(observed_isSlow : Bool = false, observed_isFire : Bool = false).(
-        [report_state(tube, slow)]X(true, observed_isFire) &&
-        [report_state(tube, fire)]X(observed_isSlow, true) &&
-        [report_state(tube, norm)]X(false, false) &&
-        (val(!observed_isSlow && !observed_isFire) =>
-		([(!(report_state(tube, slow) || report_state(tube, fire) || report_state(tube, norm) || set_traffic_light(tube, red)))*.
-            set_traffic_light(tube, red)]false))
-    )
+forall tube:Tube.
+(
+  nu X(observed_isSlow : Bool = false, observed_isFire : Bool = false).
+  (
+    [report_state(tube, slow)]X(true, observed_isFire) &&
+    [report_state(tube, fire)]X(observed_isSlow, true) &&
+    [report_state(tube, norm)]X(false, false) &&
+    [forall state:TubeState.(!(report_state(tube, state)))]X(observed_isSlow, observed_isFire) &&
+    (val(!observed_isSlow && !observed_isFire) => ([set_traffic_light(tube, red)]false))
+  )
 )
